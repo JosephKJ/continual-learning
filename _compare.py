@@ -8,7 +8,7 @@ import main
 
 description = 'Compare performance of CL strategies on each scenario of permuted or split MNIST.'
 parser = argparse.ArgumentParser('./_compare.py', description=description)
-parser.add_argument('--seed', type=int, default=99, help='[first] random seed (for each random-module used)')
+parser.add_argument('--seed', type=int, default=1, help='[first] random seed (for each random-module used)')
 parser.add_argument('--n-seeds', type=int, default=1, help='how often to repeat?')
 parser.add_argument('--no-gpus', action='store_false', dest='cuda', help="don't use GPUs")
 parser.add_argument('--data-dir', type=str, default='./datasets', dest='d_dir', help="default: %(default)s")
@@ -158,12 +158,12 @@ if __name__ == '__main__':
     ## Offline
     args.replay = "offline"
     OFF = {}
-    OFF = collect_all(OFF, seed_list, args, name="Offline")
+    # OFF = collect_all(OFF, seed_list, args, name="Offline")
 
     ## None
     args.replay = "none"
     NONE = {}
-    NONE = collect_all(NONE, seed_list, args, name="None")
+    # NONE = collect_all(NONE, seed_list, args, name="None")
 
 
     ###----"TASK-SPECIFIC"----####
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     if args.scenario=="task":
         args.gating_prop = args.xdg
         XDG = {}
-        XDG = collect_all(XDG, seed_list, args, name="XdG")
+        # XDG = collect_all(XDG, seed_list, args, name="XdG")
         args.gating_prop = 0.
 
 
@@ -181,20 +181,20 @@ if __name__ == '__main__':
     ## EWC
     args.ewc = True
     EWC = {}
-    EWC = collect_all(EWC, seed_list, args, name="EWC")
+    # EWC = collect_all(EWC, seed_list, args, name="EWC")
 
     ## online EWC
     args.online = True
     args.ewc_lambda = args.o_lambda
     OEWC = {}
-    OEWC = collect_all(OEWC, seed_list, args, name="Online EWC")
+    # OEWC = collect_all(OEWC, seed_list, args, name="Online EWC")
     args.ewc = False
     args.online = False
 
     ## SI
     args.si = True
     SI = {}
-    SI = collect_all(SI, seed_list, args, name="SI")
+    # SI = collect_all(SI, seed_list, args, name="SI")
     args.si = False
 
 
@@ -204,21 +204,21 @@ if __name__ == '__main__':
     args.replay = "current"
     args.distill = True
     LWF = {}
-    LWF = collect_all(LWF, seed_list, args, name="LwF")
+    # LWF = collect_all(LWF, seed_list, args, name="LwF")
 
     ## DGR
     args.replay = "generative"
     args.distill = False
     RP = {}
-    RP = collect_all(RP, seed_list, args, name="DGR")
+    # RP = collect_all(RP, seed_list, args, name="DGR")
 
     ## DGR+distill
     args.replay = "generative"
     args.distill = True
     RKD = {}
-    RKD = collect_all(RKD, seed_list, args, name="DGR+distill")
+    # RKD = collect_all(RKD, seed_list, args, name="DGR+distill")
     args.replay = "none"
-    
+
 
     ###----"EXEMPLARS + REPLAY"----####
 
