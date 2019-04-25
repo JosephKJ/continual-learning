@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import os
 from param_stamp import get_param_stamp_from_args
