@@ -1,8 +1,9 @@
 import copy
 import numpy as np
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.utils.data import ConcatDataset, Dataset
 import torch
+import dataset
 
 
 def _permutate_image_pixels(image, permutation):
@@ -22,7 +23,7 @@ def _permutate_image_pixels(image, permutation):
 
 
 def get_dataset(name, type='train', download=True, capacity=None, permutation=None, dir='./datasets',
-                verbose=False, target_transform=None):
+                verbose=True, target_transform=None):
     '''Create [train|valid|test]-dataset.'''
 
     data_name = 'mnist' if name=='mnist28' else name
@@ -125,7 +126,8 @@ class ExemplarDataset(Dataset):
 
 # specify available data-sets.
 AVAILABLE_DATASETS = {
-    'mnist': datasets.MNIST,
+    'mnist': dataset.MNIST,
+    'sound_mnist': dataset.SoundMNIST,
 }
 
 # specify available transforms.
@@ -137,12 +139,16 @@ AVAILABLE_TRANSFORMS = {
     'mnist28': [
         transforms.ToTensor(),
     ],
+    'sound_mnist': [
+        transforms.ToTensor(),
+    ],
 }
 
 # specify configurations of available data-sets.
 DATASET_CONFIGS = {
     'mnist': {'size': 32, 'channels': 1, 'classes': 10},
     'mnist28': {'size': 28, 'channels': 1, 'classes': 10},
+    'sound_mnist': {'size': 28, 'channels': 1, 'classes': 10},
 }
 
 
@@ -183,16 +189,17 @@ def get_multitask_experiment(name, scenario, tasks, data_dir="./datasets", only_
         if tasks>10:
             raise ValueError("Experiment 'splitMNIST' cannot have more than 10 tasks!")
         # configurations
-        config = DATASET_CONFIGS['mnist28']
+        dset_name = 'sound_mnist'      # 'mnist28'
+        config = DATASET_CONFIGS[dset_name]
         classes_per_task = int(np.floor(10 / tasks))
         if not only_config:
             # prepare permutation to shuffle label-ids (to create different class batches for each random seed)
             permutation = np.array(list(range(10))) if exception else np.random.permutation(list(range(10)))
             target_transform = transforms.Lambda(lambda y, x=permutation: int(permutation[y]))
             # prepare train and test datasets with all classes
-            mnist_train = get_dataset('mnist28', type="train", dir=data_dir, target_transform=target_transform,
+            mnist_train = get_dataset(dset_name, type="train", dir=data_dir, target_transform=target_transform,
                                       verbose=verbose)
-            mnist_test = get_dataset('mnist28', type="test", dir=data_dir, target_transform=target_transform,
+            mnist_test = get_dataset(dset_name, type="test", dir=data_dir, target_transform=target_transform,
                                      verbose=verbose)
             # generate labels-per-task
             labels_per_task = [
