@@ -204,12 +204,20 @@ def run(args):
         ).to(device)
         model.lamda_pl = 1. #--> to make that this VAE is also trained to classify
     else:
-        model = Classifier(
-            image_size=config['size'], image_channels=config['channels'], classes=config['classes'],
-            fc_layers=args.fc_lay, fc_units=args.fc_units, fc_drop=args.fc_drop, fc_nl=args.fc_nl,
-            fc_bn=True if args.fc_bn=="yes" else False, excit_buffer=True if args.gating_prop>0 else False,
-            binaryCE=args.bce, binaryCE_distill=args.bce_distill,
-        ).to(device)
+        if args.use_audio_and_video:
+            model = Multimodal_Classifier(
+                image_size=config['size'], image_channels=config['channels'], classes=config['classes'],
+                fc_layers=args.fc_lay, fc_units=args.fc_units, fc_drop=args.fc_drop, fc_nl=args.fc_nl,
+                fc_bn=True if args.fc_bn == "yes" else False, excit_buffer=True if args.gating_prop > 0 else False,
+                binaryCE=args.bce, binaryCE_distill=args.bce_distill,
+            ).to(device)
+        else:
+            model = Classifier(
+                image_size=config['size'], image_channels=config['channels'], classes=config['classes'],
+                fc_layers=args.fc_lay, fc_units=args.fc_units, fc_drop=args.fc_drop, fc_nl=args.fc_nl,
+                fc_bn=True if args.fc_bn=="yes" else False, excit_buffer=True if args.gating_prop>0 else False,
+                binaryCE=args.bce, binaryCE_distill=args.bce_distill,
+            ).to(device)
 
     # Define optimizer (only include parameters that "requires_grad")
     model.optim_list = [{'params': filter(lambda p: p.requires_grad, model.parameters()), 'lr': args.lr}]

@@ -66,9 +66,9 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
 
     def forward(self, x):
 
-        # todo: split x
-        final_features_image = self.fcE_image(self.flatten(x))
-        final_features_audio = self.fcE_audio(self.flatten(x))
+        image, audio = torch.chunk(x, 2, dim=1)
+        final_features_image = self.fcE_image(self.flatten(image))
+        final_features_audio = self.fcE_audio(self.flatten(audio))
 
         final_features = self.fuse_layer(final_features_image, final_features_audio)
 

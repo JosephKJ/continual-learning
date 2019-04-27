@@ -21,7 +21,7 @@ task_params.add_argument('--experiment', type=str, default='splitMNIST', choices
 task_params.add_argument('--scenario', type=str, default='class', choices=['task', 'domain', 'class'])
 task_params.add_argument('--tasks', type=int, default=5, help='number of tasks')
 task_params.add_argument('--use-only-audio', action='store_true', help="use audio data only")
-task_params.add_argument('--use-audio-and-video', action='store_true', help="Use audio data along with visual data."
+task_params.add_argument('--use-audio-and-video', action='store_false', help="Use audio data along with visual data."
                                                                             "Will override 'use-only-audio'")
 
 # specify loss functions to be used
