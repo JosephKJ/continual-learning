@@ -213,13 +213,13 @@ if __name__ == '__main__':
     args.replay = "generative"
     args.distill = False
     RP = {}
-    RP = collect_all(RP, seed_list, args, name="DGR")
+    # RP = collect_all(RP, seed_list, args, name="DGR")
 
     ## DGR+distill
     args.replay = "generative"
     args.distill = True
     RKD = {}
-    RKD = collect_all(RKD, seed_list, args, name="DGR+distill")
+    # RKD = collect_all(RKD, seed_list, args, name="DGR+distill")
     args.replay = "none"
 
 
