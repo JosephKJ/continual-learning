@@ -76,6 +76,7 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
 
     def feature_extractor(self, images):
         # todo: get the features from fuse layer
+        images, _ = torch.chunk(images, 2, dim=1)
         return self.fcE_image(self.flatten(images))
 
     def train_a_batch(self, x, y, scores=None, x_=None, y_=None, scores_=None, rnt=0.5, active_classes=None, task=1):

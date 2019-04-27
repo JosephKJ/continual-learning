@@ -161,12 +161,12 @@ if __name__ == '__main__':
     ## Offline
     args.replay = "offline"
     OFF = {}
-    OFF = collect_all(OFF, seed_list, args, name="Offline")
+    # OFF = collect_all(OFF, seed_list, args, name="Offline")
 
     ## None
     args.replay = "none"
     NONE = {}
-    NONE = collect_all(NONE, seed_list, args, name="None")
+    # NONE = collect_all(NONE, seed_list, args, name="None")
 
 
     ###----"TASK-SPECIFIC"----####
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     if args.scenario=="task":
         args.gating_prop = args.xdg
         XDG = {}
-        XDG = collect_all(XDG, seed_list, args, name="XdG")
+        # XDG = collect_all(XDG, seed_list, args, name="XdG")
         args.gating_prop = 0.
 
 
@@ -184,20 +184,20 @@ if __name__ == '__main__':
     ## EWC
     args.ewc = True
     EWC = {}
-    EWC = collect_all(EWC, seed_list, args, name="EWC")
+    # EWC = collect_all(EWC, seed_list, args, name="EWC")
 
     ## online EWC
     args.online = True
     args.ewc_lambda = args.o_lambda
     OEWC = {}
-    OEWC = collect_all(OEWC, seed_list, args, name="Online EWC")
+    # OEWC = collect_all(OEWC, seed_list, args, name="Online EWC")
     args.ewc = False
     args.online = False
 
     ## SI
     args.si = True
     SI = {}
-    SI = collect_all(SI, seed_list, args, name="SI")
+    # SI = collect_all(SI, seed_list, args, name="SI")
     args.si = False
 
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     args.replay = "current"
     args.distill = True
     LWF = {}
-    LWF = collect_all(LWF, seed_list, args, name="LwF")
+    # LWF = collect_all(LWF, seed_list, args, name="LwF")
 
     ## DGR
     args.replay = "generative"
