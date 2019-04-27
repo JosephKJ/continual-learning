@@ -10,6 +10,7 @@ from param_stamp import get_param_stamp, get_param_stamp_from_args
 import evaluate
 from data import get_multitask_experiment
 from encoder import Classifier
+from dual_channel_model import Multimodal_Classifier
 from vae_models import AutoEncoder
 import callbacks as cb
 from train import train_cl
@@ -31,6 +32,9 @@ task_params = parser.add_argument_group('Task Parameters')
 task_params.add_argument('--experiment', type=str, default='splitMNIST', choices=['permMNIST', 'splitMNIST'])
 task_params.add_argument('--scenario', type=str, default='class', choices=['task', 'domain', 'class'])
 task_params.add_argument('--tasks', type=int, default=5, help='number of tasks')
+task_params.add_argument('--use-only-audio', action='store_true', help="use audio data only")
+task_params.add_argument('--use-audio-and-video', action='store_true', help="Use audio data along with visual data."
+                                                                            "Will override 'use-only-audio'")
 
 # specify loss functions to be used
 loss_params = parser.add_argument_group('Loss Parameters')
@@ -180,7 +184,8 @@ def run(args):
     # Prepare data for chosen experiment
     (train_datasets, test_datasets), config, classes_per_task = get_multitask_experiment(
         name=args.experiment, scenario=scenario, tasks=args.tasks, data_dir=args.d_dir,
-        verbose=True, exception=True if args.seed==0 else False,
+        verbose=True, exception=True if args.seed==0 else False, use_audio=args.use_only_audio,
+        use_audio_video=args.use_audio_and_video,
     )
 
 

@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 import numpy as np
 import utils
 import excitability_modules as em
@@ -67,6 +68,7 @@ class fc_layer_split(nn.Module):
         return list
 
 #-----------------------------------------------------------------------------------------------------------#
+
 
 class MLP(nn.Module):
     '''Module for a multi-layer perceptron (MLP).
@@ -158,3 +160,22 @@ class MLP(nn.Module):
         for layer_id in range(1, self.layers+1):
             list += getattr(self, 'fcLayer{}'.format(layer_id)).list_init_layers()
         return list
+
+
+class fuse_layer(nn.Module):
+    def __init__(self, input_size=800, output_size=400):
+        super().__init__()
+        self.fc = fc_layer(input_size, output_size)
+
+    def forward(self, f1, f2):
+        """
+        Stack f1 and f2 back to back and apply a 1x1 convolution on it.
+        :param f1: Visual features
+        :param f2: Audio feaures
+        :return:
+        """
+        x = torch.cat((f1, f2), dim=1)
+        return self.fc(x)
+
+    def list_init_layers(self):
+        return self.fc.list_init_layers()

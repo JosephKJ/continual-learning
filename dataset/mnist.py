@@ -1,6 +1,7 @@
 from __future__ import print_function
 import torch.utils.data as data
 from PIL import Image
+from torchvision import datasets
 import os
 import os.path
 import errno
@@ -8,8 +9,9 @@ import numpy as np
 import torch
 import codecs
 import matplotlib.image
+from random import randint
 
-class MNIST(data.Dataset):
+class SoundImageMNIST(data.Dataset):
     """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
 
     Args:
@@ -45,6 +47,8 @@ class MNIST(data.Dataset):
         if download:
             self.download()
 
+        self.read_audio_data()
+
         if not self._check_exists():
             raise RuntimeError('Dataset not found.' +
                                ' You can use download=True to download it')
@@ -66,20 +70,30 @@ class MNIST(data.Dataset):
         """
         if self.train:
             img, target = self.train_data[index], self.train_labels[index]
+            cls = target.item()
+            rand_index = randint(0, len(self.audio_train[cls]) - 1)
+            audio = self.audio_train[cls][rand_index]
+
         else:
             img, target = self.test_data[index], self.test_labels[index]
+            cls = target.item()
+            rand_index = randint(0, len(self.audio_test[cls]) - 1)
+            audio = self.audio_test[cls][rand_index]
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
         img = Image.fromarray(img.numpy(), mode='L')
+        audio = Image.fromarray(audio.numpy(), mode='L')    # because it is a spectrogram (image)
 
         if self.transform is not None:
             img = self.transform(img)
+            audio = self.transform(audio)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return img, target
+        data = torch.cat((img, audio), 0)
+        return data, target
 
     def __len__(self):
         if self.train:
@@ -90,6 +104,54 @@ class MNIST(data.Dataset):
     def _check_exists(self):
         return os.path.exists(os.path.join(self.root, self.processed_folder, self.training_file)) and \
             os.path.exists(os.path.join(self.root, self.processed_folder, self.test_file))
+
+    def read_audio_data(self):
+        path = os.path.join(self.root, '../sound_mnist')
+
+        if os.path.exists(os.path.join(path, self.processed_folder, self.training_file)) and \
+            os.path.exists(os.path.join(path, self.processed_folder, self.test_file)):
+            self.audio_train = torch.load(os.path.join(path, self.processed_folder, self.training_file))
+            self.audio_test = torch.load(os.path.join(path, self.processed_folder, self.test_file))
+            return
+
+        train_spectrograms = [[],[],[],[],[],[],[],[],[],[]]
+        test_spectrograms = [[],[],[],[],[],[],[],[],[],[]]
+
+        for root, _, fnames in sorted(os.walk(path)):
+            for fname in fnames:
+                if fname.split('.')[1] == 'png':
+                    cls, _, id = fname.split('.')[0].split('_')
+                    id = int(id)
+                    cls = int(cls)
+                    path_temp = os.path.join(root, fname)
+                    img = torch.from_numpy(self.read_image(path_temp))
+
+                    if id < 10:     # Test image
+                        test_spectrograms[cls].append(img)
+                    else:           # Train image
+                        train_spectrograms[cls].append(img)
+
+        self.audio_train = train_spectrograms
+        self.audio_test = test_spectrograms
+
+        try:
+            os.makedirs(os.path.join(path, self.processed_folder))
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
+        with open(os.path.join(path, self.processed_folder, self.training_file), 'wb') as f:
+            torch.save(train_spectrograms, f)
+        with open(os.path.join(path, self.processed_folder, self.test_file), 'wb') as f:
+            torch.save(test_spectrograms, f)
+
+    def read_image(self, path):
+        with open(path, 'rb') as f:
+            img = matplotlib.image.imread(path)
+            img = np.mean(img, axis=2)
+            return img
 
     def download(self):
         """Download the MNIST data if it doesn't exist in processed_folder already."""
@@ -152,128 +214,6 @@ class MNIST(data.Dataset):
         return fmt_str
 
 
-class FashionMNIST(MNIST):
-    """`Fashion-MNIST <https://github.com/zalandoresearch/fashion-mnist>`_ Dataset.
-
-    Args:
-        root (string): Root directory of dataset where ``processed/training.pt``
-            and  ``processed/test.pt`` exist.
-        train (bool, optional): If True, creates dataset from ``training.pt``,
-            otherwise from ``test.pt``.
-        download (bool, optional): If true, downloads the dataset from the internet and
-            puts it in root directory. If dataset is already downloaded, it is not
-            downloaded again.
-        transform (callable, optional): A function/transform that  takes in an PIL image
-            and returns a transformed version. E.g, ``transforms.RandomCrop``
-        target_transform (callable, optional): A function/transform that takes in the
-            target and transforms it.
-    """
-    urls = [
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz',
-    ]
-
-
-class EMNIST(MNIST):
-    """`EMNIST <https://www.nist.gov/itl/iad/image-group/emnist-dataset/>`_ Dataset.
-
-    Args:
-        root (string): Root directory of dataset where ``processed/training.pt``
-            and  ``processed/test.pt`` exist.
-        split (string): The dataset has 6 different splits: ``byclass``, ``bymerge``,
-            ``balanced``, ``letters``, ``digits`` and ``mnist``. This argument specifies
-            which one to use.
-        train (bool, optional): If True, creates dataset from ``training.pt``,
-            otherwise from ``test.pt``.
-        download (bool, optional): If true, downloads the dataset from the internet and
-            puts it in root directory. If dataset is already downloaded, it is not
-            downloaded again.
-        transform (callable, optional): A function/transform that  takes in an PIL image
-            and returns a transformed version. E.g, ``transforms.RandomCrop``
-        target_transform (callable, optional): A function/transform that takes in the
-            target and transforms it.
-    """
-    url = 'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
-    splits = ('byclass', 'bymerge', 'balanced', 'letters', 'digits', 'mnist')
-
-    def __init__(self, root, split, **kwargs):
-        if split not in self.splits:
-            raise ValueError('Split "{}" not found. Valid splits are: {}'.format(
-                split, ', '.join(self.splits),
-            ))
-        self.split = split
-        self.training_file = self._training_file(split)
-        self.test_file = self._test_file(split)
-        super(EMNIST, self).__init__(root, **kwargs)
-
-    def _training_file(self, split):
-        return 'training_{}.pt'.format(split)
-
-    def _test_file(self, split):
-        return 'test_{}.pt'.format(split)
-
-    def download(self):
-        """Download the EMNIST data if it doesn't exist in processed_folder already."""
-        from six.moves import urllib
-        import gzip
-        import shutil
-        import zipfile
-
-        if self._check_exists():
-            return
-
-        # download files
-        try:
-            os.makedirs(os.path.join(self.root, self.raw_folder))
-            os.makedirs(os.path.join(self.root, self.processed_folder))
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
-                raise
-
-        print('Downloading ' + self.url)
-        data = urllib.request.urlopen(self.url)
-        filename = self.url.rpartition('/')[2]
-        raw_folder = os.path.join(self.root, self.raw_folder)
-        file_path = os.path.join(raw_folder, filename)
-        with open(file_path, 'wb') as f:
-            f.write(data.read())
-
-        print('Extracting zip archive')
-        with zipfile.ZipFile(file_path) as zip_f:
-            zip_f.extractall(raw_folder)
-        os.unlink(file_path)
-        gzip_folder = os.path.join(raw_folder, 'gzip')
-        for gzip_file in os.listdir(gzip_folder):
-            if gzip_file.endswith('.gz'):
-                print('Extracting ' + gzip_file)
-                with open(os.path.join(raw_folder, gzip_file.replace('.gz', '')), 'wb') as out_f, \
-                        gzip.GzipFile(os.path.join(gzip_folder, gzip_file)) as zip_f:
-                    out_f.write(zip_f.read())
-        shutil.rmtree(gzip_folder)
-
-        # process and save as torch files
-        for split in self.splits:
-            print('Processing ' + split)
-            training_set = (
-                read_image_file(os.path.join(raw_folder, 'emnist-{}-train-images-idx3-ubyte'.format(split))),
-                read_label_file(os.path.join(raw_folder, 'emnist-{}-train-labels-idx1-ubyte'.format(split)))
-            )
-            test_set = (
-                read_image_file(os.path.join(raw_folder, 'emnist-{}-test-images-idx3-ubyte'.format(split))),
-                read_label_file(os.path.join(raw_folder, 'emnist-{}-test-labels-idx1-ubyte'.format(split)))
-            )
-            with open(os.path.join(self.root, self.processed_folder, self._training_file(split)), 'wb') as f:
-                torch.save(training_set, f)
-            with open(os.path.join(self.root, self.processed_folder, self._test_file(split)), 'wb') as f:
-                torch.save(test_set, f)
-
-        print('Done!')
-
-
 def get_int(b):
     return int(codecs.encode(b, 'hex'), 16)
 
@@ -299,7 +239,7 @@ def read_image_file(path):
         return torch.from_numpy(parsed).view(length, num_rows, num_cols)
 
 
-class SoundMNIST(MNIST):
+class SoundMNIST(datasets.MNIST):
     """
     SoundMNIST: https://github.com/Jakobovski/free-spoken-digit-dataset
 
@@ -309,9 +249,6 @@ class SoundMNIST(MNIST):
         super(SoundMNIST, self).__init__(root, **kwargs)
 
     def download(self):
-        labels = range(10)
-        speakers = ['jackson', 'nicolas', 'theo', 'yweweler']
-
         try:
             os.makedirs(os.path.join(self.root, self.processed_folder))
         except OSError as e:

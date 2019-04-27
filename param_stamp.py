@@ -14,7 +14,7 @@ def get_param_stamp_from_args(args):
 
     config = data.get_multitask_experiment(
         name=args.experiment, scenario=scenario, tasks=args.tasks, data_dir=args.d_dir, only_config=True,
-        verbose=False,
+        verbose=False, use_audio=args.use_only_audio, use_audio_video=args.use_audio_and_video,
     )
 
     if args.feedback:

@@ -1,1 +1,1 @@
-from .mnist import MNIST, SoundMNIST
+from .mnist import SoundMNIST, SoundImageMNIST
