@@ -166,6 +166,7 @@ class fuse_layer(nn.Module):
     def __init__(self, input_size=800, output_size=400):
         super().__init__()
         self.fc = fc_layer(input_size, output_size)
+        self.conv = torch.nn.Conv1d(2,1,1)
 
     def forward(self, f1, f2):
         """
@@ -174,8 +175,12 @@ class fuse_layer(nn.Module):
         :param f2: Audio feaures
         :return:
         """
-        x = torch.cat((f1, f2), dim=1)
-        return self.fc(x)
+        # x = torch.cat((f1, f2), dim=1)  # 400+400 one after the other.
+        # return self.fc(x)
+
+        x = torch.stack((f1, f2), dim=1)    # 1x1 convolutions (NiN)
+        combined_acts = self.conv(x)
+        return torch.unbind(combined_acts, dim=1)[0]
 
     def list_init_layers(self):
         return self.fc.list_init_layers()

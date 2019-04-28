@@ -247,7 +247,7 @@ if __name__ == '__main__':
 
     ## For each seed, create list with average precisions
     for seed in seed_list:
-        ave_prec[seed] = [NONE[seed], OFF[seed], EWC[seed], OEWC[seed], SI[seed], LWF[seed]]
+        ave_prec[seed] = [NONE[seed], OFF[seed], EWC[seed], OEWC[seed], SI[seed], LWF[seed], LWF[seed], LWF[seed]]
         # ave_prec[seed] = [NONE[seed], OFF[seed], EWC[seed], OEWC[seed], SI[seed], LWF[seed], RP[seed], RKD[seed]]
         if args.scenario=="task":
             ave_prec[seed].append(XDG[seed])
