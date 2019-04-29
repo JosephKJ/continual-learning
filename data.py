@@ -126,9 +126,10 @@ class ExemplarDataset(Dataset):
 
 # specify available data-sets.
 AVAILABLE_DATASETS = {
-    'mnist': datasets.MNIST,                        # PyTorch's MNIST
-    'sound_mnist': dataset.SoundMNIST,              # Custom MNIST: loads ONLY sound
-    'sound_plus_mnist': dataset.SoundImageMNIST     # Custom MNIST: loads images and sound
+    'mnist': datasets.MNIST,                                # PyTorch's MNIST
+    'sound_mnist': dataset.SoundMNIST,                      # Custom MNIST: loads ONLY sound (spectrograms)
+    'sound_plus_mnist': dataset.SoundImageMNIST,            # Custom MNIST: loads images and sound (spectrograms)
+    'wav_sound_plus_mnist': dataset.WavSoundImageMNIST      # Custom MNIST: loads images and sound (wav tensor)
 }
 
 # specify available transforms.
@@ -146,6 +147,9 @@ AVAILABLE_TRANSFORMS = {
     'sound_plus_mnist': [
         transforms.ToTensor(),
     ],
+    'wav_sound_plus_mnist': [
+        transforms.ToTensor(),
+    ],
 }
 
 # specify configurations of available data-sets.
@@ -154,6 +158,7 @@ DATASET_CONFIGS = {
     'mnist28': {'size': 28, 'channels': 1, 'classes': 10},
     'sound_mnist': {'size': 28, 'channels': 1, 'classes': 10},
     'sound_plus_mnist': {'size': 28, 'channels': 1, 'classes': 10},
+    'wav_sound_plus_mnist': {'size': 28, 'channels': 1, 'classes': 10},
 }
 
 
@@ -161,7 +166,7 @@ DATASET_CONFIGS = {
 
 
 def get_multitask_experiment(name, scenario, tasks, data_dir="./datasets", only_config=False, verbose=False,
-                             exception=False, use_audio=False, use_audio_video=False):
+                             exception=False, use_audio=False, use_audio_video=False, use_wav_audio_and_video=False):
     '''Load, organize and return train- and test-dataset for requested experiment.
 
     [exception]:    <bool>; if True, for visualization no permutation is applied to first task (permMNIST) or digits
@@ -199,6 +204,8 @@ def get_multitask_experiment(name, scenario, tasks, data_dir="./datasets", only_
             dset_name = 'sound_mnist'
         if use_audio_video:
             dset_name = 'sound_plus_mnist'
+        if use_wav_audio_and_video:
+            dset_name = 'wav_sound_plus_mnist'
 
         config = DATASET_CONFIGS[dset_name]
         classes_per_task = int(np.floor(10 / tasks))

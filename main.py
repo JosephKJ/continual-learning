@@ -33,6 +33,7 @@ task_params.add_argument('--experiment', type=str, default='splitMNIST', choices
 task_params.add_argument('--scenario', type=str, default='class', choices=['task', 'domain', 'class'])
 task_params.add_argument('--tasks', type=int, default=5, help='number of tasks')
 task_params.add_argument('--use-only-audio', action='store_true', help="use audio data only")
+task_params.add_argument('--use-wav-audio-and-video', action='store_true', help="Use raw audio data along with visual data.")
 task_params.add_argument('--use-audio-and-video', action='store_true', help="Use audio data along with visual data."
                                                                             "Will override 'use-only-audio'")
 
@@ -185,7 +186,7 @@ def run(args):
     (train_datasets, test_datasets), config, classes_per_task = get_multitask_experiment(
         name=args.experiment, scenario=scenario, tasks=args.tasks, data_dir=args.d_dir,
         verbose=True, exception=True if args.seed==0 else False, use_audio=args.use_only_audio,
-        use_audio_video=args.use_audio_and_video,
+        use_audio_video=args.use_audio_and_video, use_wav_audio_and_video=args.use_wav_audio_and_video,
     )
 
 
@@ -204,7 +205,7 @@ def run(args):
         ).to(device)
         model.lamda_pl = 1. #--> to make that this VAE is also trained to classify
     else:
-        if args.use_audio_and_video:
+        if args.use_audio_and_video or args.use_wav_audio_and_video:
             model = Multimodal_Classifier(
                 image_size=config['size'], image_channels=config['channels'], classes=config['classes'],
                 fc_layers=args.fc_lay, fc_units=args.fc_units, fc_drop=args.fc_drop, fc_nl=args.fc_nl,

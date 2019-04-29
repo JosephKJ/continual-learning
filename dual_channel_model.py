@@ -4,6 +4,7 @@ from linear_nets import MLP,fc_layer,fuse_layer
 from exemplars import ExemplarHandler
 from continual_learner import ContinualLearner
 from replayer import Replayer
+from conv_nets import AudioNet
 import utils
 
 
@@ -40,9 +41,8 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
                        excitability=excitability, excit_buffer=excit_buffer, gated=gated)
 
         # fully connected hidden layers for Audio
-        self.fcE_audio = MLP(input_size=image_channels * image_size ** 2, output_size=fc_units, layers=fc_layers - 1,
-                       hid_size=fc_units, drop=fc_drop, batch_norm=fc_bn, nl=fc_nl, bias=bias,
-                       excitability=excitability, excit_buffer=excit_buffer, gated=gated)
+        self.fcE_audio = AudioNet()
+
         # fuse-layer
         self.fuse_layer = fuse_layer(input_size=fc_units*2, output_size=fc_units)
 
@@ -64,11 +64,11 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
     def name(self):
         return "{}_c{}".format(self.fcE_image.name, self.classes)
 
-    def forward(self, x):
+    def forward(self, x, audio):
 
-        image, audio = torch.chunk(x, 2, dim=1)
-        final_features_image = self.fcE_image(self.flatten(image))
-        final_features_audio = self.fcE_audio(self.flatten(audio))
+        final_features_image = self.fcE_image(self.flatten(x))
+        final_features_audio = self.fcE_audio(audio)
+        final_features_audio = torch.squeeze(final_features_audio)
 
         final_features = self.fuse_layer(final_features_image, final_features_audio)
 
@@ -79,7 +79,8 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
         images, _ = torch.chunk(images, 2, dim=1)
         return self.fcE_image(self.flatten(images))
 
-    def train_a_batch(self, x, y, scores=None, x_=None, y_=None, scores_=None, rnt=0.5, active_classes=None, task=1):
+    def train_a_batch(self, x, y, scores=None, x_=None, y_=None, scores_=None, rnt=0.5, active_classes=None, task=1,
+                      audio=None):
         '''Train model for one batch ([x],[y]), possibly supplemented with replayed data ([x_],[y_/scores_]).
 
         [x]               <tensor> batch of inputs (could be None, in which case only 'replayed' data is used)
@@ -108,7 +109,7 @@ class Multimodal_Classifier(ContinualLearner, Replayer, ExemplarHandler):
                 self.apply_XdGmask(task=task)
 
             # Run model
-            y_hat = self(x)
+            y_hat = self(x, audio)
             # -if needed, remove predictions for classes not in current task
             if active_classes is not None:
                 class_entries = active_classes[-1] if type(active_classes[0])==list else active_classes

@@ -146,9 +146,9 @@ def train_cl(model, train_datasets, replay_mode="none", scenario="class",classes
             if replay_mode=="offline" and scenario=="task":
                 x = y = scores = None
             else:
-                x, y = next(data_loader)                                    #--> sample training data of current task
+                x, audio, y = next(data_loader)                             #--> sample training data of current task
                 y = y-classes_per_task*(task-1) if scenario=="task" else y  #--> ITL: adjust y-targets to 'active range'
-                x, y = x.to(device), y.to(device)                           #--> transfer them to correct device
+                x, y, audio = x.to(device), y.to(device), audio.to(device)  #--> transfer them to correct device
                 # If --bce, --bce-distill & scenario=="class", calculate scores of current batch with previous model
                 binary_distillation = hasattr(model, "binaryCE") and model.binaryCE and model.binaryCE_distill
                 if binary_distillation and scenario=="class" and (previous_model is not None):
@@ -245,7 +245,7 @@ def train_cl(model, train_datasets, replay_mode="none", scenario="class",classes
 
                 # Train the main model with this batch
                 loss_dict = model.train_a_batch(x, y, x_=x_, y_=y_, scores=scores, scores_=scores_,
-                                                active_classes=active_classes, task=task, rnt = 1./task)
+                                                active_classes=active_classes, task=task, rnt = 1./task, audio=audio)
 
                 # Update running parameter importance estimates in W
                 if isinstance(model, ContinualLearner) and (model.si_c>0):
