@@ -26,8 +26,8 @@ class AudioNet(nn.Module):
         x = self.pool2(x)
 
         x = self.avg_pool(x)
-        x = x.permute(0, 2, 1)
-        x = self.fc1(x)
+        # x = x.permute(0, 2, 1)
+        # x = self.fc1(x)
 
         return x
 

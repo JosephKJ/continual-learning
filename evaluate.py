@@ -33,13 +33,13 @@ def validate(model, dataset, batch_size=128, test_size=1024, verbose=True, allow
     # Loop over batches in [dataset]
     data_loader = utils.get_data_loader(dataset, batch_size, cuda=model._is_on_cuda())
     total_tested = total_correct = 0
-    for data, labels in data_loader:
+    for data, audio, labels in data_loader:
         # -break on [test_size] (if "None", full dataset is used)
         if test_size:
             if total_tested >= test_size:
                 break
         # -evaluate model (if requested, only on [allowed_classes])
-        data, labels = data.to(model._device()), labels.to(model._device())
+        data, labels, audio = data.to(model._device()), labels.to(model._device()), audio.to(model._device())
         labels = labels - allowed_classes[0] if (allowed_classes is not None) else labels
         with torch.no_grad():
             if with_exemplars:
@@ -48,7 +48,7 @@ def validate(model, dataset, batch_size=128, test_size=1024, verbose=True, allow
                 if max(predicted).item() >= model.classes:
                     predicted = predicted % model.classes
             else:
-                scores = model(data) if (allowed_classes is None) else model(data)[:, allowed_classes]
+                scores = model(data, audio) if (allowed_classes is None) else model(data, audio)[:, allowed_classes]
                 _, predicted = torch.max(scores, 1)
         # -update statistics
         total_correct += (predicted == labels).sum().item()
